@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* GoodHealth primary blue rgb(13, 90, 205) = hsl(214, 88%, 43%) */
+    --primary: 214 88% 43%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Brand green for "Good" */
+    --brand-green: 142 71% 45%;
+
+    --secondary: 214 20% 96%;
+    --secondary-foreground: 215 25% 15%;
+
+    --muted: 214 15% 94%;
+    --muted-foreground: 215 15% 50%;
+
+    --accent: 214 88% 97%;
+    --accent-foreground: 214 88% 43%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 92%;
+    --ring: 214 88% 43%;
+
+    --radius: 0.75rem;
+    
+    /* Medical dashboard specific */
+    --header-blur: rgba(255, 255, 255, 0.9);
+    --overlay-dark: rgba(0, 0, 0, 0.5);
+    --card-shadow: 0 2px 8px rgba(13, 90, 205, 0.08);
+    --card-shadow-hover: 0 4px 16px rgba(13, 90, 205, 0.15);
+    
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 215 25% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 215 25% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 214 88% 43%;
+    --primary-foreground: 0 0% 100%;
+    
+    --brand-green: 142 71% 45%;
+
+    --secondary: 215 25% 18%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 215 20% 20%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 215 25% 18%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 215 20% 25%;
+    --input: 215 20% 20%;
+    --ring: 214 88% 43%;
+    
+    --header-blur: rgba(20, 25, 35, 0.9);
+    --overlay-dark: rgba(0, 0, 0, 0.7);
+    --card-shadow: 0 2px 8px rgba(13, 90, 205, 0.15);
+    --card-shadow-hover: 0 4px 16px rgba(13, 90, 205, 0.25);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Safe area for iOS devices */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  
+  /* Mobile touch optimization */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Doctor Login</title>
+</head>
+<body>
+    <h1>Doctor Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testLogin() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/staff/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'dr.anderson@gmail.com',
+                        password: 'password123',
+                        staffId: 'EMP0002'
+                    })
+                });
+
+                const data = await response.json();
+                resultEl.textContent = JSON.stringify(data, null, 2);
+
+                if (data.success) {
+                    resultEl.textContent += '\n\n✅ LOGIN SUCCESSFUL!';
+                } else {
+                    resultEl.textContent += '\n\n❌ LOGIN FAILED: ' + data.message;
+                }
+            } catch (error) {
+                resultEl.textContent = '❌ ERROR: ' + error.message + '\n\n' + error.stack;
+                console.error('Full error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

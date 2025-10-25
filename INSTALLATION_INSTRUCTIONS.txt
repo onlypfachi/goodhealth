@@ -1,0 +1,220 @@
+========================================
+HOSPITAL BOOKING SYSTEM - INSTALLATION GUIDE
+========================================
+
+This guide will help you set up and run the Hospital Booking System on a new laptop.
+
+========================================
+SYSTEM REQUIREMENTS
+========================================
+
+- Operating System: Windows 10/11
+- At least 4GB RAM
+- At least 2GB free disk space
+- Internet connection (for initial setup)
+
+========================================
+REQUIRED SOFTWARE TO INSTALL
+========================================
+
+1. NODE.JS (v18.0.0 or higher)
+   - Download from: https://nodejs.org/
+   - Download the LTS (Long Term Support) version
+   - Run the installer and follow the installation wizard
+   - Keep default settings during installation
+   - Verify installation by opening Command Prompt and typing:
+     node --version
+     npm --version
+
+2. GIT (Optional, but recommended for version control)
+   - Download from: https://git-scm.com/download/win
+   - Run the installer with default settings
+
+3. A CODE EDITOR (Optional, for viewing/editing code)
+   - Visual Studio Code: https://code.visualstudio.com/
+   - OR any text editor of your choice
+
+========================================
+INSTALLATION STEPS
+========================================
+
+STEP 1: COPY THE PROJECT FILES
+--------------------------------------
+1. Copy the entire "good health" folder to your new laptop
+2. Place it in a convenient location (e.g., Documents folder)
+
+STEP 2: INSTALL SERVER DEPENDENCIES
+--------------------------------------
+1. Open Command Prompt (cmd)
+2. Navigate to the server folder:
+   cd "path\to\good health\server"
+
+   Example:
+   cd "C:\Users\YourName\Documents\good health\server"
+
+3. Install dependencies:
+   npm install
+
+4. Wait for installation to complete (this may take 5-10 minutes)
+
+STEP 3: INSTALL ADMIN DASHBOARD DEPENDENCIES
+--------------------------------------
+1. In Command Prompt, navigate to the admin dashboard folder:
+   cd "..\admin dashboard"
+
+2. Install dependencies:
+   npm install
+
+3. Wait for installation to complete
+
+STEP 4: INSTALL DOCTOR DASHBOARD DEPENDENCIES
+--------------------------------------
+1. In Command Prompt, navigate to the doctor dashboard folder:
+   cd "..\doctor dashboard"
+
+2. Install dependencies:
+   npm install
+
+3. Wait for installation to complete
+
+STEP 5: SET UP THE DATABASE
+--------------------------------------
+1. Navigate to the server folder:
+   cd "..\server"
+
+2. Run the database setup:
+   npm run setup
+
+3. The database file (database.db) should already be included in the project
+
+========================================
+RUNNING THE APPLICATION
+========================================
+
+OPTION 1: USING THE BATCH FILE (EASIEST)
+--------------------------------------
+1. Navigate to the main "good health" folder
+2. Double-click on "start-admin.bat"
+3. This will automatically start both:
+   - Backend Server (on http://localhost:5000)
+   - Admin Dashboard (check the terminal for the port)
+
+OPTION 2: MANUAL START
+--------------------------------------
+1. Open TWO Command Prompt windows
+
+2. In the FIRST window (Backend Server):
+   cd "path\to\good health\server"
+   npm run dev
+
+3. In the SECOND window (Admin Dashboard):
+   cd "path\to\good health\admin dashboard"
+   npm run dev
+
+4. The doctor dashboard can be started similarly:
+   cd "path\to\good health\doctor dashboard"
+   npm run dev
+
+========================================
+DEFAULT LOGIN CREDENTIALS
+========================================
+
+ADMIN LOGIN:
+- Email: admin@gmail.com
+- Password: admin123
+- Staff ID: EMP0001
+
+(Additional credentials may be found in the database)
+
+========================================
+PROJECT STRUCTURE
+========================================
+
+good health/
+├── server/                    (Backend API server - Node.js/Express)
+│   ├── database.db           (SQLite database file)
+│   ├── server.js             (Main server file)
+│   ├── package.json          (Server dependencies)
+│   └── ...
+├── admin dashboard/          (Admin frontend - React/Vite)
+│   ├── package.json          (Admin dashboard dependencies)
+│   └── ...
+├── doctor dashboard/         (Doctor frontend - React/Vite)
+│   ├── package.json          (Doctor dashboard dependencies)
+│   └── ...
+└── start-admin.bat          (Quick start script)
+
+========================================
+TROUBLESHOOTING
+========================================
+
+ISSUE: "npm is not recognized"
+SOLUTION: Node.js is not installed or not in PATH. Reinstall Node.js and restart Command Prompt.
+
+ISSUE: Port 5000 is already in use
+SOLUTION: Another application is using port 5000. Either close that application or modify the port in server/server.js
+
+ISSUE: "Cannot find module"
+SOLUTION: Dependencies not installed. Run "npm install" in the respective folder.
+
+ISSUE: Database errors
+SOLUTION: Run "npm run setup" in the server folder to reset the database.
+
+ISSUE: "Access denied" or permission errors
+SOLUTION: Run Command Prompt as Administrator (right-click > Run as administrator)
+
+========================================
+IMPORTANT NOTES
+========================================
+
+1. The database.db file contains all your data. Make sure to include it when copying the project.
+
+2. The node_modules folders are large and can be regenerated. If you want to reduce the size:
+   - Delete all "node_modules" folders before copying
+   - Run "npm install" on the new laptop as described above
+
+3. Keep the Backend Server running while using the dashboards.
+
+4. Default ports:
+   - Backend Server: http://localhost:5000
+   - Admin/Doctor Dashboards: Usually http://localhost:5173 or similar
+     (The exact port will be shown in the terminal when you start them)
+
+5. For production deployment, you'll need to:
+   - Build the frontend: npm run build
+   - Use proper environment variables
+   - Configure a production database
+   - Set up proper security measures
+
+========================================
+SUPPORT & MAINTENANCE
+========================================
+
+- Keep Node.js updated to the latest LTS version
+- Regularly backup the database.db file
+- Check the console/terminal for error messages if something doesn't work
+
+========================================
+TECH STACK SUMMARY
+========================================
+
+Backend:
+- Node.js with Express
+- SQLite database
+- JWT authentication
+- Key packages: bcryptjs, cors, dotenv, jsonwebtoken, sqlite3
+
+Frontend (Admin & Doctor Dashboards):
+- React 18
+- Vite (build tool)
+- TypeScript
+- Tailwind CSS
+- Radix UI components
+- React Router
+- React Query
+
+========================================
+END OF INSTALLATION GUIDE
+========================================
+
+For any issues, check the console output for specific error messages.
