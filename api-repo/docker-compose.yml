@@ -1,0 +1,36 @@
+services:
+  redis:
+    container_name: redis
+    image: valkey/valkey:8
+    ports:
+      - '6379:6379'
+
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog:latest
+    platform: linux/amd64
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  app-db:
+    container_name: app-db
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dqms
+      MYSQL_USER: root_user
+      MYSQL_PASSWORD: password
+    ports:
+      - '3306:3306'
+    volumes:
+      - app-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ppassword"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  app-db:
