@@ -31,9 +31,9 @@ import {
 } from "@/components/ui/dialog";
 
 interface PatientProfile {
-  userId: number;
+  id: number;
   email: string;
-  fullName: string;
+  name: string;
   patientId: string;
   phone: string;
   address: string;
@@ -73,13 +73,14 @@ const ProfileSettings = () => {
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/patient/profile');
+      console.log("Fetching profile for user ID:", JSON.parse(localStorage.getItem('user')).id);
+      const response = await api.get('/users/'+JSON.parse(localStorage.getItem('user')).id);
       if (response.success) {
-        const profileData = response.data;
+        const profileData = response.user;
         setProfile(profileData);
-        setPhone(profileData.phone || '');
+        setPhone(profileData.phoneNumber || '');
         setEmail(profileData.email || '');
-        setTempPhone(profileData.phone || '');
+        setTempPhone(profileData.phoneNumber || '');
         setTempEmail(profileData.email || '');
       }
     } catch (error: any) {
@@ -153,14 +154,17 @@ const ProfileSettings = () => {
   };
 
   const handleSaveContact = async () => {
+    
     try {
       // Update phone if changed
       if (tempPhone !== phone) {
-        const phoneResponse = await api.post('/patient/update-phone', {
-          phoneNumber: tempPhone
+        const phoneResponse = await api.patch('/users/'+profile.id, {
+          phone_number: tempPhone
         });
-        if (phoneResponse.data.success) {
-          setPhone(phoneResponse.data.phoneNumber);
+
+        console.log("Phone update response:", phoneResponse);
+        if (phoneResponse.success) {
+          setPhone(phoneResponse.user.phoneNumber);
           toast.success("Phone number updated successfully");
         }
       }
@@ -171,12 +175,12 @@ const ProfileSettings = () => {
           toast.error("Password required to change email");
           return;
         }
-        const emailResponse = await api.post('/patient/change-email', {
-          newEmail: tempEmail,
+        const emailResponse = await api.patch('/users/'+profile.id, {
+          email: tempEmail,
           password: emailPassword
         });
         if (emailResponse.data.success) {
-          setEmail(emailResponse.data.newEmail);
+          setEmail(emailResponse.user.newEmail);
           toast.success("Email updated successfully. Use this email to login next time.");
           setEmailPassword("");
         }
@@ -274,7 +278,7 @@ const ProfileSettings = () => {
           <div>
             <Label className="text-sm text-muted-foreground">Name</Label>
             <p className="text-lg font-semibold">
-              {isLoading ? "Loading..." : profile?.fullName || "N/A"}
+              {isLoading ? "Loading..." : profile?.name || "N/A"}
             </p>
           </div>
         </div>

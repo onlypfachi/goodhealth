@@ -197,7 +197,7 @@ export const appointments = {
 
   // Get patient appointments
   getPatientAppointments: async (patientId: string): Promise<ApiResponse<Appointment[]>> => {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/patient/${patientId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/appointments`, {
       headers: getAuthHeaders(),
     });
 

@@ -27,6 +27,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'phone_number' => 'nullable|string|max:20',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'type'=> 'required|in:PATIENT,DOCTOR,CLINIC_MANAGER'
         ]);
@@ -34,6 +35,7 @@ class UserController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
             'type' => $request->type,
         ]);
@@ -47,15 +49,31 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        return response()->json(['success'=> true,'user'=> UserData::from($user)],200);
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)
-    {
-        //
+{
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|lowercase|email|max:255|unique:'.User::class.',email,'.$user->id,
+            'password' => ['sometimes','required','confirmed', Rules\Password::defaults()],
+            'phone_number' => 'sometimes|nullable|string|max:20',
+        ]);
+
+        $user->update([
+            'name' => $request->name ?? $user->name,
+            'email' => $request->email ?? $user->email,
+            'phone_number' => $request->phone_number ?? $user->phone_number,
+            'password' => $request->password ? Hash::make($request->password) : $user->password,
+        ]);
+
+        dd($user);
+
+        return response()->json(['success'=> true,'user'=> UserData::from($request->user)],200);
     }
 
     /**

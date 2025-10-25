@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Building2 } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export interface Department {
   id: string;
@@ -23,28 +23,56 @@ interface DepartmentSelectorProps {
   error?: string;
 }
 
-const DepartmentSelector = ({ value, onChange, error }: DepartmentSelectorProps) => {
+const DepartmentSelector = ({
+  value,
+  onChange,
+  error,
+}: DepartmentSelectorProps) => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/departments`);
-        const data = await response.json();
+        const token = localStorage.getItem("token"); // or whatever key you used during login
 
-        if (data.success && data.data) {
-          // Transform API data to match component format
-          const transformed = data.data.map((dept: any) => ({
-            id: dept.department_id.toString(),
+        if (!token) {
+          console.warn("⚠️ No token found in localStorage");
+          setDepartments([]);
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/departments`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // attach the Bearer token
+          },
+        });
+
+        if (!response.ok) {
+          console.error(
+            `❌ Failed to fetch departments: ${response.status} ${response.statusText}`
+          );
+          setDepartments([]);
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched departments:", data);
+
+        if (data.success && data.departments) {
+          const transformed = data.departments.map((dept: any) => ({
+            id: dept.id.toString(),
             name: dept.name,
-            description: dept.description || ""
+            description: dept.description || "",
           }));
           setDepartments(transformed);
+        } else {
+          setDepartments([]);
         }
       } catch (error) {
-        console.error('Error fetching departments:', error);
-        // Set empty array on error - no fallback to hardcoded data
+        console.error("Error fetching departments:", error);
         setDepartments([]);
       } finally {
         setIsLoading(false);
@@ -65,7 +93,13 @@ const DepartmentSelector = ({ value, onChange, error }: DepartmentSelectorProps)
           id="department"
           className={error ? "border-destructive" : ""}
         >
-          <SelectValue placeholder={isLoading ? "Loading departments..." : "Choose the department that best matches your needs"} />
+          <SelectValue
+            placeholder={
+              isLoading
+                ? "Loading departments..."
+                : "Choose the department that best matches your needs"
+            }
+          />
         </SelectTrigger>
         <SelectContent className="bg-popover z-50">
           {departments.length === 0 && !isLoading ? (
@@ -78,7 +112,9 @@ const DepartmentSelector = ({ value, onChange, error }: DepartmentSelectorProps)
                 <div className="flex flex-col">
                   <span className="font-medium">{dept.name}</span>
                   {dept.description && (
-                    <span className="text-xs text-muted-foreground">{dept.description}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {dept.description}
+                    </span>
                   )}
                 </div>
               </SelectItem>
