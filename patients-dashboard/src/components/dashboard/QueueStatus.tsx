@@ -102,7 +102,7 @@ const QueueStatus = ({ booking, onReschedule }: QueueStatusProps) => {
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">Queue Number</p>
             <p className="text-5xl font-bold text-primary">
-              #{booking.queueNumber.toString().padStart(2, "0")}
+              #{booking.queue_number.toString().padStart(2, "0")}
             </p>
           </div>
         </div>

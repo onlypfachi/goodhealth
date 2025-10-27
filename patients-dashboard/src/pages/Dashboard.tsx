@@ -11,12 +11,12 @@ import { Activity, FileText, Settings, Home } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Booking {
-  queueNumber: number;
+  queue_number: number;
   doctor: string;
   department: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  appointmentId?: number;
+  appointment_date: string;
+  appointment_time: string;
+  appointment_id?: number;
 }
 
 const Dashboard = () => {
@@ -72,12 +72,12 @@ const Dashboard = () => {
           return;
         }
 
-        if (response.data && response.data.length > 0) {
-          console.log(`📋 Found ${response.data.length} total appointments`);
+        if (response.appointments && response.appointments.length > 0) {
+          console.log(`📋 Found ${response.appointments.length} total appointments`);
 
           // Get the most recent upcoming appointment
-          const upcomingAppointments = response.data.filter((apt: any) =>
-            apt.status === 'scheduled' || apt.status === 'called' || apt.status === 'in-progress'
+          const upcomingAppointments = response.appointments.filter((apt: any) =>
+            apt.status === 'scheduled' || apt.status === 'pending' || apt.status === 'in-progress'
           );
 
           console.log(`✅ Found ${upcomingAppointments.length} active appointments`);
@@ -88,22 +88,22 @@ const Dashboard = () => {
 
             // Transform API data to Booking format
             // ✅ FIX: Parse date as UTC to avoid timezone off-by-one errors
-            const [year, month, day] = latestAppointment.appointment_date.split('-').map(Number);
+            const [year, month, day] = latestAppointment.appointmentDate.split('-').map(Number);
             const appointmentDateObj = new Date(Date.UTC(year, month - 1, day));
 
             setBooking({
-              queueNumber: latestAppointment.queue_number || 1,
-              doctor: latestAppointment.doctor_name || "Doctor",
-              department: latestAppointment.department_name || "Department",
-              appointmentDate: appointmentDateObj.toLocaleDateString("en-US", {
+              queue_number: latestAppointment.queueNumber || 1,
+              doctor: latestAppointment.doctor.name || "Doctor",
+              department: latestAppointment.doctor.department.name || "Department",
+              appointment_date: appointmentDateObj.toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
                 day: "numeric",
                 timeZone: "UTC" // ✅ Use UTC to match how the date was stored
               }),
-              appointmentTime: latestAppointment.appointment_time || "10:00",
-              appointmentId: latestAppointment.appointment_id, // ✅ Add appointment ID for rescheduling
+              appointment_time: latestAppointment.appointmentTime || "10:00",
+              appointment_id: latestAppointment.id.toString(), // ✅ Add appointment ID for rescheduling
             });
 
             toast.success("Appointments loaded successfully!");
@@ -129,9 +129,10 @@ const Dashboard = () => {
 
   const handleBookingSubmit = async (bookingData: {
     department: string;
-    symptoms: string;
-    doctorId?: string;
+    reason: string;
+    doctor_id?: string;
   }) => {
+    console.log("🔄 Submitting booking data:", bookingData);
     try {
       // Call the API to book appointment
       const { appointments } = await import("@/lib/api");
@@ -145,29 +146,26 @@ const Dashboard = () => {
 
         // Get real doctor name from API response
         const doctorName = appointmentData.doctor?.name ||
-                          appointmentData.doctor?.full_name ||
-                          appointmentData.doctor_name ||
+                          appointmentData.doctor?.name ||
+                          appointmentData.doctor.name ||
                           "Doctor";
 
         // Get real queue number from API
         const queueNumber = appointmentData.queueNumber || appointmentData.queue_number || 1;
 
         // Get real department name from API
-        const departmentName = appointmentData.departmentName ||
-                              appointmentData.department_name ||
+        const departmentName = appointmentData.department.name ||
                               "Department";
 
         // Parse the appointment date from response
         // ✅ FIX: Parse date as UTC to avoid timezone off-by-one errors
         const dateStr = appointmentData.appointmentDate ||
-                       appointmentData.appointment_date ||
                        appointmentData.date;
         const [year, month, day] = dateStr.split('-').map(Number);
         const appointmentDate = new Date(Date.UTC(year, month - 1, day));
 
         // Format time properly
         const appointmentTime = appointmentData.appointmentTime ||
-                               appointmentData.appointment_time ||
                                appointmentData.time ||
                                "10:00";
 
@@ -191,7 +189,7 @@ const Dashboard = () => {
             timeZone: "UTC" // ✅ Use UTC to match how the date was stored
           }),
           appointmentTime: appointmentTime,
-          appointmentId: appointmentData.appointmentId || appointmentData.appointment_id, // ✅ FIX: Include appointmentId for reschedule
+          appointmentId: appointmentData.id, // ✅ FIX: Include appointmentId for reschedule
         });
 
         // Scroll to queue status

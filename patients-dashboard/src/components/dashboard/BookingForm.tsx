@@ -11,22 +11,22 @@ import DoctorDropdown from "./DoctorDropdown";
 interface BookingFormProps {
   onSubmit: (bookingData: {
     department: string;
-    symptoms: string;
-    appointmentDate: string;
-    doctorId?: string;
+    reason: string;
+    appointment_date: string;
+    doctor_id?: string;
   }) => void;
 }
 
 const BookingForm = ({ onSubmit }: BookingFormProps) => {
   const [department, setDepartment] = useState("");
-  const [symptoms, setSymptoms] = useState("");
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [doctorId, setDoctorId] = useState("");
+  const [reason, setReason] = useState("");
+  const [appointment_date, setAppointmentDate] = useState("");
+  const [doctor_id, setDoctorId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     department?: string;
-    symptoms?: string;
-    appointmentDate?: string;
+    reason?: string;
+    appointment_date?: string;
   }>({});
 
   const getTomorrowDate = () => {
@@ -63,14 +63,14 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
       newErrors.department = "Please select a department";
     }
 
-    if (!symptoms.trim()) {
-      newErrors.symptoms = "Please describe your symptoms";
-    } else if (symptoms.trim().length < 10) {
-      newErrors.symptoms = "Please provide more details (at least 10 characters)";
+    if (!reason.trim()) {
+      newErrors.reason = "Please describe your symptoms";
+    } else if (reason.trim().length < 10) {
+      newErrors.reason = "Please provide more details (at least 10 characters)";
     }
 
-    if (!appointmentDate) {
-      newErrors.appointmentDate = "Please select an appointment date";
+    if (!appointment_date) {
+      newErrors.appointment_date = "Please select an appointment date";
     }
     // ✅ Removed weekend error - we auto-adjust weekends to Monday instead
 
@@ -90,10 +90,10 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
 
     try {
       // ✅ AUTO-ADJUST WEEKEND TO MONDAY
-      let finalAppointmentDate = appointmentDate;
+      let finalAppointmentDate = appointment_date;
 
-      if (isWeekend(appointmentDate)) {
-        const date = new Date(appointmentDate);
+      if (isWeekend(appointment_date)) {
+        const date = new Date(appointment_date);
         const dayOfWeek = date.getDay();
 
         // Calculate days to add to get to Monday
@@ -116,14 +116,14 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
       // Call the parent onSubmit which will handle the API call
       onSubmit({
         department,
-        symptoms,
-        appointmentDate: finalAppointmentDate, // Use the adjusted date
-        doctorId: doctorId || undefined,
+        reason,
+        appointment_date: finalAppointmentDate, // Use the adjusted date
+        doctor_id: doctor_id || undefined,
       });
 
       toast.success(
         `Appointment scheduled for ${new Date(finalAppointmentDate).toLocaleDateString()}! ${
-          doctorId
+          doctor_id
             ? "You'll be seen by your selected doctor."
             : "Our system will assign you to the best available doctor."
         }`
@@ -131,7 +131,7 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
 
       // Reset form
       setDepartment("");
-      setSymptoms("");
+      setReason("");
       setAppointmentDate("");
       setDoctorId("");
       setErrors({});
@@ -160,6 +160,7 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
             value={department}
             onChange={(value) => {
               setDepartment(value);
+              console.log("Selected department:", value);
               setDoctorId(""); // Reset doctor selection when department changes
               setErrors({ ...errors, department: undefined });
             }}
@@ -175,7 +176,7 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
             <input
               id="appointmentDate"
               type="date"
-              value={appointmentDate}
+              value={appointment_date}
               min={getTomorrowDate()}
               onChange={(e) => {
                 const selectedDate = e.target.value;
@@ -188,12 +189,12 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
                   });
                 }
 
-                setErrors({ ...errors, appointmentDate: undefined });
+                setErrors({ ...errors, appointment_date: undefined });
               }}
               className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            {errors.appointmentDate && (
-              <p className="text-sm text-destructive">{errors.appointmentDate}</p>
+            {errors.appointment_date && (
+              <p className="text-sm text-destructive">{errors.appointment_date}</p>
             )}
             <p className="text-xs text-muted-foreground">
               📅 Appointments are available Monday through Friday, 8:00 AM - 4:00 PM
@@ -218,7 +219,7 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
             <div className="space-y-2">
               <DoctorDropdown
                 departmentId={department}
-                value={doctorId}
+                value={doctor_id}
                 onChange={setDoctorId}
               />
               <p className="text-xs text-muted-foreground">
@@ -228,12 +229,12 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
           )}
 
           <SymptomsForm
-            value={symptoms}
+            value={reason}
             onChange={(value) => {
-              setSymptoms(value);
-              setErrors({ ...errors, symptoms: undefined });
+              setReason(value);
+              setErrors({ ...errors, reason: undefined });
             }}
-            error={errors.symptoms}
+            error={errors.reason}
           />
 
           <Button 

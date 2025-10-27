@@ -21,7 +21,27 @@ export interface Doctor {
 
 // Fetch doctors from API
 const fetchDoctorsByDepartment = async (departmentId: string): Promise<Doctor[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/departments/${departmentId}/doctors`);
+    const token = localStorage.getItem("token"); // or whatever key you used during login
+
+        if (!token) {
+          console.warn("⚠️ No token found in localStorage");
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/departments/`+departmentId, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // attach the Bearer token
+          },
+        });
+
+        if (!response.ok) {
+          console.error(
+            `❌ Failed to fetch departments: ${response.status} ${response.statusText}`
+          );
+          return;
+        }
 
   if (!response.ok) {
     throw new Error('Failed to fetch doctors');
@@ -29,12 +49,13 @@ const fetchDoctorsByDepartment = async (departmentId: string): Promise<Doctor[]>
 
   const data = await response.json();
 
-  if (data.success && data.data) {
+  console.log("Fetched doctors data:", data);
+  if (data.success && data.department.doctors) {
     // Transform API data to match component format
-    return data.data.map((doctor: any) => ({
-      id: doctor.user_id.toString(),
-      name: doctor.full_name,
-      specialty: doctor.department_name || "General Practice",
+    return data.department.doctors.map((doctor: any) => ({
+      id: doctor.id.toString(),
+      name: doctor.name,
+      specialty: data.department.name || "General Practice",
       availability: "Available for booking",
       departmentId: departmentId
     }));

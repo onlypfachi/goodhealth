@@ -14,7 +14,7 @@ class AppointmentController extends Controller
      */
     public function index(Request $request)
     {
-        $appointments = Appointment::query()->where('patient_id', $request->user()->id)->get();
+        $appointments = Appointment::query()->with(['doctor.department', 'patient'])->where('patient_id', $request->user()->id)->get();
 
         return response()->json(
             [
@@ -28,7 +28,32 @@ class AppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'doctor_id' => 'nullable|exists:users,id',
+            'appointment_date' => 'required|date',
+            'appointment_time' => 'nullable',
+            'status' => 'nullable|string|max:255',
+            'reason' => 'required|string',
+            'notes' => 'nullable|string',
+            'confirmed_at' => 'nullable|date',
+            'cancelled_at' => 'nullable|date',
+            'completed_at' => 'nullable|date',
+            'queue_number' => 'nullable|integer',
+            'room_number' => 'nullable|string|max:255',
+        ]);
+
+        // enforce patient and creator as the authenticated user
+        $data = array_merge($validated, [
+            'patient_id' => $request->user()->id,
+            'created_by' => $request->user()->id,
+        ]);
+
+        $appointment = Appointment::create($data);
+
+        return response()->json([
+            'success' => true,
+            'appointment' => AppointmentData::from($appointment),
+        ], 201);
     }
 
     /**

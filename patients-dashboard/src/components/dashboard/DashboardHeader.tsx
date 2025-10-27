@@ -28,7 +28,7 @@ const DashboardHeader = ({ booking }: DashboardHeaderProps) => {
           {booking && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold">
               <span className="text-sm">Queue</span>
-              <span className="text-xl">#{booking.queueNumber.toString().padStart(2, "0")}</span>
+              <span className="text-xl">#{booking.queue_number.toString().padStart(2, "0")}</span>
             </div>
           )}
         </div>

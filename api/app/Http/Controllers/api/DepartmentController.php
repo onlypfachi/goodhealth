@@ -16,10 +16,9 @@ class DepartmentController extends Controller
     {
         return response()->json([
             'success' => true,
-            'departments' =>
-            DepartmentData::collect(
+            'departments' => DepartmentData::collect(
                 Department::all()
-            )
+            ),
         ], 200);
     }
 
@@ -36,7 +35,12 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        //
+        $loaded = $department->load('doctors');
+
+        return response()->json([
+            'success' => true,
+            'department' => DepartmentData::from($loaded),
+        ]);
     }
 
     /**

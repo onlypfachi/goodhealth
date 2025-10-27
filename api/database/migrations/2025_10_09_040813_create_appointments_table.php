@@ -17,25 +17,17 @@ return new class extends Migration
 
             $table->foreignId('patient_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('doctor_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('clinic_id')->nullable()->constrained('clinics')->nullOnDelete();
-
             $table->date('appointment_date');
-            $table->time('appointment_time');
-
+            $table->time('appointment_time')->nullable();
             $table->string('status')->default(AppointmentStatusEnum::Pending->value);
-
             $table->text('reason');
             $table->text('notes')->nullable();
-
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-
             $table->datetime('confirmed_at')->nullable();
             $table->datetime('cancelled_at')->nullable();
             $table->datetime('completed_at')->nullable();
-
-            $table->integer('token_number')->nullable();
+            $table->integer('queue_number')->nullable();
             $table->string('room_number')->nullable();
-
             $table->timestampsTz();
         });
     }

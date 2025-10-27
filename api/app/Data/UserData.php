@@ -24,6 +24,7 @@ class UserData extends Data
         public ?string $phoneNumber = null,
         public string $createdAt,
         public string $updatedAt,
+        public ?DepartmentData $department = null,
     ) {
         // Compute the patient ID only if the user type is PATIENT
         $this->patientId = $this->type === UserTypeEnum::PATIENT
