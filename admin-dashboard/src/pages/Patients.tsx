@@ -5,10 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Patients = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,19 +44,22 @@ const Patients = () => {
 
   const fetchPatients = async () => {
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/patients`, {
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users/patients`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
+      console.log("Fetched patients:", data);
       if (data.success) {
         setPatients(data.data);
       }
     } catch (error) {
-      console.error('Error fetching patients:', error);
+      console.error("Error fetching patients:", error);
     }
   };
 
@@ -53,8 +68,10 @@ const Patients = () => {
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(p => {
-        const isOnline = p.last_login && new Date(p.last_login) > new Date(Date.now() - 5 * 60 * 1000);
+      filtered = filtered.filter((p) => {
+        const isOnline =
+          p.last_login &&
+          new Date(p.last_login) > new Date(Date.now() - 5 * 60 * 1000);
         if (statusFilter === "active") return isOnline;
         if (statusFilter === "inactive") return !isOnline;
         return true;
@@ -64,13 +81,14 @@ const Patients = () => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(patient =>
-        patient.full_name?.toLowerCase().includes(query) ||
-        patient.patient_id?.toLowerCase().includes(query) ||
-        patient.email?.toLowerCase().includes(query) ||
-        patient.phone?.includes(query) ||
-        patient.department?.toLowerCase().includes(query) ||
-        patient.last_department?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (patient) =>
+          patient.name?.toLowerCase().includes(query) ||
+          patient.patientId?.toLowerCase().includes(query) ||
+          patient.email?.toLowerCase().includes(query) ||
+          patient.phoneNumber?.includes(query) ||
+          patient.department?.toLowerCase().includes(query) ||
+          patient.last_department?.toLowerCase().includes(query)
       );
     }
 
@@ -79,20 +97,22 @@ const Patients = () => {
 
   const handleViewPatient = async (patient: any) => {
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/patients/${patient.user_id}`, {
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users/${patient.id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
       const data = await response.json();
       if (data.success) {
-        setSelectedPatient(data.data);
+        setSelectedPatient(data.user);
         setIsViewDialogOpen(true);
       }
     } catch (error) {
-      console.error('Error fetching patient details:', error);
+      console.error("Error fetching patient details:", error);
       toast({
         title: "Error",
         description: "Failed to load patient details",
@@ -103,7 +123,7 @@ const Patients = () => {
 
   const getPatientStatus = (patient: any) => {
     // Check is_online flag from database
-    if (patient.is_online === 1) {
+    if (patient.isOnline) {
       return { label: "Online", variant: "default" as const };
     }
     return { label: "Offline", variant: "secondary" as const };
@@ -118,7 +138,9 @@ const Patients = () => {
             <Users className="w-8 h-8 text-primary" />
             Patient Management
           </h1>
-          <p className="text-muted-foreground">View and manage all registered patients</p>
+          <p className="text-muted-foreground">
+            View and manage all registered patients
+          </p>
         </div>
       </div>
 
@@ -160,35 +182,68 @@ const Patients = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Patient ID</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Name</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Age</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Email</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Phone</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Department</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Last Visit</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Status</th>
-                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Actions</th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Patient ID
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Name
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Age
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Email
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Phone
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Last Visit
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPatients.map((patient) => {
                   const status = getPatientStatus(patient);
                   return (
-                    <tr key={patient.user_id} className="border-b border-border hover:bg-secondary/50 transition-smooth">
-                      <td className="p-4 text-sm font-medium text-primary">{patient.patient_id}</td>
-                      <td className="p-4 text-sm font-medium text-foreground">{patient.full_name}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{patient.age || 'N/A'}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{patient.email}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{patient.phone || 'N/A'}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{patient.department || 'N/A'}</td>
+                    <tr
+                      key={patient.id}
+                      className="border-b border-border hover:bg-secondary/50 transition-smooth"
+                    >
+                      <td className="p-4 text-sm font-medium text-primary">
+                        {patient.patientId}
+                      </td>
+                      <td className="p-4 text-sm font-medium text-foreground">
+                        {patient.name}
+                      </td>
                       <td className="p-4 text-sm text-muted-foreground">
-                        {patient.last_visit ? new Date(patient.last_visit).toLocaleDateString() : 'Never'}
+                        {patient.dateOfBirth
+                          ? `${Math.floor(
+                              (Date.now() -
+                                new Date(patient.dateOfBirth).getTime()) /
+                                (1000 * 60 * 60 * 24 * 365.25)
+                            )} years`
+                          : "N/A"}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {patient.email}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {patient.phoneNumber || "N/A"}
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground">
+                        {patient.lastLoginAt
+                          ? new Date(patient.lastLoginAt).toLocaleDateString()
+                          : "Never"}
                       </td>
                       <td className="p-4">
-                        <Badge variant={status.variant}>
-                          {status.label}
-                        </Badge>
+                        <Badge variant={status.variant}>{status.label}</Badge>
                       </td>
                       <td className="p-4">
                         <Button
@@ -216,13 +271,6 @@ const Patients = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Patient Details</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsViewDialogOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </DialogTitle>
           </DialogHeader>
           {selectedPatient && (
@@ -233,59 +281,74 @@ const Patients = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Patient ID</Label>
-                    <p className="font-medium">{selectedPatient.patient.patient_id}</p>
+                    <p className="font-medium">{selectedPatient.patientId}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Full Name</Label>
-                    <p className="font-medium">{selectedPatient.patient.full_name}</p>
+                    <p className="font-medium">{selectedPatient.name}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Email</Label>
-                    <p className="font-medium">{selectedPatient.patient.email}</p>
+                    <p className="font-medium">{selectedPatient.email}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Phone</Label>
-                    <p className="font-medium">{selectedPatient.patient.phone || 'N/A'}</p>
+                    <p className="font-medium">
+                      {selectedPatient.phoneNumber || "N/A"}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Date of Birth</Label>
+                    <Label className="text-muted-foreground">
+                      Date of Birth
+                    </Label>
                     <p className="font-medium">
-                      {selectedPatient.patient.date_of_birth
-                        ? new Date(selectedPatient.patient.date_of_birth).toLocaleDateString()
-                        : 'N/A'}
+                      {selectedPatient.dateOfBirth
+                        ? new Date(
+                            selectedPatient.dateOfBirth
+                          ).toLocaleDateString()
+                        : "N/A"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Gender</Label>
-                    <p className="font-medium capitalize">{selectedPatient.patient.gender || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Department</Label>
-                    <p className="font-medium">{selectedPatient.patient.department || 'N/A'}</p>
+                    <p className="font-medium capitalize">
+                      {selectedPatient.gender || "N/A"}
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-muted-foreground">Address</Label>
-                    <p className="font-medium">{selectedPatient.patient.address || 'N/A'}</p>
+                    <p className="font-medium">
+                      {selectedPatient.address || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Appointment History */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-lg">Appointment History</h3>
-                {selectedPatient.appointments.length > 0 ? (
+                <h3 className="font-semibold text-lg">Appointments</h3>
+
+                {Array.isArray(selectedPatient.patientAppointments) &&
+                selectedPatient.patientAppointments.length > 0 ? (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {selectedPatient.appointments.map((apt: any) => (
-                      <div key={apt.appointment_id} className="p-3 border rounded-lg">
+                    {selectedPatient.patientAppointments.map((apt: any) => (
+                      <div
+                        key={apt.id}
+                        className="p-3 border rounded-lg"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{apt.department_name}</p>
+                            <p className="font-medium">{apt.doctor.department.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              Dr. {apt.doctor_name || 'Not assigned'}
+                            {apt.doctor.name || "Not assigned"}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm">{new Date(apt.appointment_date).toLocaleDateString()}</p>
+                            <p className="text-sm">
+                              {new Date(
+                                apt.appointmentDate
+                              ).toLocaleDateString()}
+                            </p>
                             <Badge variant="secondary">{apt.status}</Badge>
                           </div>
                         </div>
@@ -293,30 +356,47 @@ const Patients = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No appointment history</p>
+                  <p className="text-sm text-muted-foreground">
+                    No appointment history
+                  </p>
                 )}
               </div>
 
               {/* Medical Records */}
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">Medical Records</h3>
-                {selectedPatient.medicalRecords.length > 0 ? (
+
+                {Array.isArray(selectedPatient.medicalRecords) &&
+                selectedPatient.medicalRecords.length > 0 ? (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {selectedPatient.medicalRecords.map((record: any) => (
-                      <div key={record.record_id} className="p-3 border rounded-lg">
+                      <div
+                        key={record.record_id}
+                        className="p-3 border rounded-lg"
+                      >
                         <div className="flex justify-between items-start mb-2">
-                          <p className="font-medium">{new Date(record.record_date).toLocaleDateString()}</p>
-                          <p className="text-sm text-muted-foreground">By {record.recorded_by_name}</p>
+                          <p className="font-medium">
+                            {new Date(record.record_date).toLocaleDateString()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            By {record.recorded_by_name}
+                          </p>
                         </div>
+
                         {record.diagnosis && (
                           <div className="mb-2">
-                            <Label className="text-xs text-muted-foreground">Diagnosis</Label>
+                            <Label className="text-xs text-muted-foreground">
+                              Diagnosis
+                            </Label>
                             <p className="text-sm">{record.diagnosis}</p>
                           </div>
                         )}
+
                         {record.prescription && (
                           <div>
-                            <Label className="text-xs text-muted-foreground">Prescription</Label>
+                            <Label className="text-xs text-muted-foreground">
+                              Prescription
+                            </Label>
                             <p className="text-sm">{record.prescription}</p>
                           </div>
                         )}
@@ -324,13 +404,18 @@ const Patients = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No medical records</p>
+                  <p className="text-sm text-muted-foreground">
+                    No medical records
+                  </p>
                 )}
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
           </DialogFooter>

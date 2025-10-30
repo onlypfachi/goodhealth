@@ -16,7 +16,7 @@ export interface Booking {
   department: string;
   appointment_date: string;
   appointment_time: string;
-  appointment_id?: number;
+  id?: number;
 }
 
 const Dashboard = () => {
@@ -63,8 +63,6 @@ const Dashboard = () => {
         const { appointments } = await import("@/lib/api");
         const response = await appointments.getPatientAppointments(patientId);
 
-        console.log("📥 Appointments API Response:", response);
-
         if (!response.success) {
           console.error("❌ API returned error:", response.message);
           toast.error(response.message || "Failed to load appointments");
@@ -89,7 +87,7 @@ const Dashboard = () => {
             // Transform API data to Booking format
             // ✅ FIX: Parse date as UTC to avoid timezone off-by-one errors
             const [year, month, day] = latestAppointment.appointmentDate.split('-').map(Number);
-            const appointmentDateObj = new Date(Date.UTC(year, month - 1, day));
+            const appointmentDateObj = new Date(latestAppointment.appointmentDate);
 
             setBooking({
               queue_number: latestAppointment.queueNumber || 1,
@@ -103,7 +101,7 @@ const Dashboard = () => {
                 timeZone: "UTC" // ✅ Use UTC to match how the date was stored
               }),
               appointment_time: latestAppointment.appointmentTime || "10:00",
-              appointment_id: latestAppointment.id.toString(), // ✅ Add appointment ID for rescheduling
+              id: latestAppointment.id, // ✅ Add appointment ID for rescheduling
             });
 
             toast.success("Appointments loaded successfully!");
@@ -234,7 +232,7 @@ const Dashboard = () => {
 
           <TabsContent value="home" className="space-y-4 p-4 animate-in">
             <Card className="shadow-card bg-card">
-              <BookingForm onSubmit={handleBookingSubmit} />
+              {!booking && <BookingForm onSubmit={handleBookingSubmit} />}
             </Card>
 
             {booking && (

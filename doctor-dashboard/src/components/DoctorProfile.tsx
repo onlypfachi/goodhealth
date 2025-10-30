@@ -112,14 +112,14 @@ const DoctorProfile = ({ doctor, onAvatarUpdate }: DoctorProfileProps) => {
 
     try {
       const staffToken = localStorage.getItem('staffToken');
+      const staffUser = JSON.parse(localStorage.getItem('staffUser'));
 
-      const response = await fetch('http://localhost:5000/api/security/change-password', {
-        method: 'POST',
+      const response = await fetch('http://127.0.0.1:8000/api/users/'+staffUser.id, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${staffToken}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,

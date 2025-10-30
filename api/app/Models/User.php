@@ -26,6 +26,10 @@ class User extends Authenticatable
         'type',
         'phone_number',
         'department_id',
+        'last_login_at',
+        'is_online',
+        'gender',
+        'date_of_birth',
     ];
 
     /**
@@ -48,11 +52,25 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
+            'isOnline' => 'boolean',
+            'date_of_birth' => 'date',
         ];
     }
 
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+ public function patientAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    // 🔹 If the user is a doctor
+    public function doctorAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id');
     }
 }

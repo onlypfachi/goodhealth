@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, Shield, Calendar, Edit2, Save, Eye, EyeOff, Lock } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Shield,
+  Calendar,
+  Edit2,
+  Save,
+  Eye,
+  EyeOff,
+  Lock,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config/api";
 
@@ -22,10 +40,10 @@ const Profile = () => {
   const [profile, setProfile] = useState({
     name: "",
     email: "",
-    phone: "",
-    role: "",
+    phoneNumber: "",
     staffId: "",
     joinDate: "",
+    type: "",
   });
 
   const [editedProfile, setEditedProfile] = useState(profile);
@@ -49,8 +67,8 @@ const Profile = () => {
 
   const loadProfile = async () => {
     try {
-      const staffToken = localStorage.getItem('staffToken');
-      const staffUser = localStorage.getItem('staffUser');
+      const staffToken = localStorage.getItem("staffToken");
+      const staffUser = localStorage.getItem("staffUser");
 
       if (!staffUser) {
         toast.error("No user data found. Please login again.");
@@ -60,22 +78,32 @@ const Profile = () => {
       const user = JSON.parse(staffUser);
 
       // Fetch latest profile data from backend
-  const response = await fetch(`${API_BASE_URL}/api/profile/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${user.id}`, {
         headers: {
-          'Authorization': `Bearer ${staffToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${staffToken}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Fetched profile data:", data);
         const profileData = {
-          name: data.data.full_name || user.name,
-          email: data.data.email || user.email,
-          phone: data.data.phone || "",
-          role: user.role === 'superadmin' ? 'Super Administrator' : 'Administrator',
-          staffId: user.staffId || data.data.staff_id || "",
-          joinDate: data.data.created_at ? new Date(data.data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "",
+          name: data.user.full_name || user.name,
+          email: data.user.email || user.email,
+          phoneNumber: data.user.phoneNumber || "",
+          type:
+            data.user.type === "superadmin"
+              ? "Super Administrator"
+              : "Administrator",
+          staffId: user.staffId || data.user.staffId || "",
+          joinDate: data.user.created_at
+            ? new Date(data.data.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "",
         };
 
         setProfile(profileData);
@@ -85,8 +113,11 @@ const Profile = () => {
         const profileData = {
           name: user.name,
           email: user.email,
-          phone: "",
-          role: user.role === 'superadmin' ? 'Super Administrator' : 'Administrator',
+          phoneNumber: "",
+          type:
+            user.type === "superadmin"
+              ? "Super Administrator"
+              : "Administrator",
           staffId: user.staffId,
           joinDate: "",
         };
@@ -94,7 +125,7 @@ const Profile = () => {
         setEditedProfile(profileData);
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error("Error loading profile:", error);
       toast.error("Failed to load profile data");
     }
   };
@@ -103,20 +134,24 @@ const Profile = () => {
     setIsLoading(true);
 
     try {
-      const staffToken = localStorage.getItem('staffToken');
-      const staffUser = JSON.parse(localStorage.getItem('staffUser') || '{}');
+      const staffToken = localStorage.getItem("staffToken");
+      const staffUser = JSON.parse(localStorage.getItem("staffUser") || "{}");
 
-  const response = await fetch(`${API_BASE_URL}/api/profile/update`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${staffToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          full_name: editedProfile.name,
-          phone: editedProfile.phone,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/` + staffUser.id,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${staffToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name: editedProfile.name,
+            phoneNumber: editedProfile.phoneNumber,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -125,7 +160,7 @@ const Profile = () => {
 
         // Update localStorage with new data
         staffUser.name = editedProfile.name;
-        localStorage.setItem('staffUser', JSON.stringify(staffUser));
+        localStorage.setItem("staffUser", JSON.stringify(staffUser));
 
         setIsEditing(false);
         toast.success("Profile updated successfully!");
@@ -133,7 +168,7 @@ const Profile = () => {
         toast.error(data.message || "Failed to update profile");
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);
@@ -165,8 +200,11 @@ const Profile = () => {
     } else if (passwordData.newPassword.length < 8) {
       errors.newPassword = "Password must be at least 8 characters long";
       isValid = false;
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)) {
-      errors.newPassword = "Password must contain uppercase, lowercase, and number";
+    } else if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)
+    ) {
+      errors.newPassword =
+        "Password must contain uppercase, lowercase, and number";
       isValid = false;
     }
 
@@ -191,19 +229,24 @@ const Profile = () => {
     setIsLoading(true);
 
     try {
-      const staffToken = localStorage.getItem('staffToken');
+      const staffToken = localStorage.getItem("staffToken");
+      const staffUser = JSON.parse(localStorage.getItem("staffUser") || "{}");
 
-  const response = await fetch(`${API_BASE_URL}/api/security/change-password`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${staffToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          current_password: passwordData.currentPassword,
-          new_password: passwordData.newPassword,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/` + staffUser.id,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${staffToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            current_password: passwordData.currentPassword,
+            new_password: passwordData.newPassword,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -224,7 +267,7 @@ const Profile = () => {
         toast.error(data.message || "Failed to change password");
       }
     } catch (error) {
-      console.error('Error changing password:', error);
+      console.error("Error changing password:", error);
       toast.error("Failed to change password. Please try again.");
     } finally {
       setIsLoading(false);
@@ -237,7 +280,9 @@ const Profile = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-          <p className="text-muted-foreground">Manage your account information</p>
+          <p className="text-muted-foreground">
+            Manage your account information
+          </p>
         </div>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)}>
@@ -246,7 +291,11 @@ const Profile = () => {
           </Button>
         ) : (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
@@ -274,9 +323,11 @@ const Profile = () => {
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="default" className="flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  {profile.role}
+                  {profile.type}
                 </Badge>
-                {profile.staffId && <Badge variant="secondary">{profile.staffId}</Badge>}
+                {profile.staffId && (
+                  <Badge variant="secondary">{profile.staffId}</Badge>
+                )}
               </div>
               {profile.joinDate && (
                 <div className="flex items-center text-sm text-muted-foreground">
@@ -320,7 +371,9 @@ const Profile = () => {
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span>{profile.email}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+              <p className="text-xs text-muted-foreground">
+                Email cannot be changed
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -329,15 +382,18 @@ const Profile = () => {
                 <Input
                   id="phone"
                   type="tel"
-                  value={editedProfile.phone}
+                  value={editedProfile.phoneNumber}
                   onChange={(e) =>
-                    setEditedProfile({ ...editedProfile, phone: e.target.value })
+                    setEditedProfile({
+                      ...editedProfile,
+                      phoneNumber: e.target.value,
+                    })
                   }
                 />
               ) : (
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span>{profile.phone || "Not set"}</span>
+                  <span>{profile.phoneNumber || "Not set"}</span>
                 </div>
               )}
             </div>
@@ -348,7 +404,9 @@ const Profile = () => {
                 <Shield className="w-4 h-4 text-muted-foreground" />
                 <span>{profile.staffId || "Not set"}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Staff ID cannot be changed</p>
+              <p className="text-xs text-muted-foreground">
+                Staff ID cannot be changed
+              </p>
             </div>
           </div>
         </CardContent>
@@ -367,7 +425,10 @@ const Profile = () => {
                 Keep your account secure
               </p>
             </div>
-            <Button variant="outline" onClick={() => setShowPasswordModal(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordModal(true)}
+            >
               <Lock className="w-4 h-4 mr-2" />
               Change Password
             </Button>
@@ -382,7 +443,9 @@ const Profile = () => {
                 Add an extra layer of security
               </p>
             </div>
-            <Button variant="outline" disabled>Enable 2FA</Button>
+            <Button variant="outline" disabled>
+              Enable 2FA
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -404,8 +467,15 @@ const Profile = () => {
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className={passwordErrors.currentPassword ? "border-red-500" : ""}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                  className={
+                    passwordErrors.currentPassword ? "border-red-500" : ""
+                  }
                 />
                 <Button
                   type="button"
@@ -414,11 +484,17 @@ const Profile = () => {
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
-                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               {passwordErrors.currentPassword && (
-                <p className="text-xs text-red-500">{passwordErrors.currentPassword}</p>
+                <p className="text-xs text-red-500">
+                  {passwordErrors.currentPassword}
+                </p>
               )}
             </div>
 
@@ -429,7 +505,12 @@ const Profile = () => {
                   id="newPassword"
                   type={showNewPassword ? "text" : "password"}
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      newPassword: e.target.value,
+                    })
+                  }
                   className={passwordErrors.newPassword ? "border-red-500" : ""}
                 />
                 <Button
@@ -439,14 +520,21 @@ const Profile = () => {
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
-                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               {passwordErrors.newPassword && (
-                <p className="text-xs text-red-500">{passwordErrors.newPassword}</p>
+                <p className="text-xs text-red-500">
+                  {passwordErrors.newPassword}
+                </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters with uppercase, lowercase, and number
+                Must be at least 8 characters with uppercase, lowercase, and
+                number
               </p>
             </div>
 
@@ -457,8 +545,15 @@ const Profile = () => {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className={passwordErrors.confirmPassword ? "border-red-500" : ""}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  className={
+                    passwordErrors.confirmPassword ? "border-red-500" : ""
+                  }
                 />
                 <Button
                   type="button"
@@ -467,16 +562,26 @@ const Profile = () => {
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               {passwordErrors.confirmPassword && (
-                <p className="text-xs text-red-500">{passwordErrors.confirmPassword}</p>
+                <p className="text-xs text-red-500">
+                  {passwordErrors.confirmPassword}
+                </p>
               )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPasswordModal(false)} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordModal(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button onClick={handleChangePassword} disabled={isLoading}>

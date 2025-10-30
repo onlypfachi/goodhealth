@@ -34,7 +34,7 @@ const QueueStatus = ({ booking, onReschedule }: QueueStatusProps) => {
       }
 
       const user = JSON.parse(userStr);
-      const appointmentId = booking.appointmentId;
+      const appointmentId = booking.id;
 
       if (!appointmentId) {
         toast({
@@ -48,7 +48,7 @@ const QueueStatus = ({ booking, onReschedule }: QueueStatusProps) => {
 
       console.log('🔄 Rescheduling appointment...', { appointmentId });
 
-      const response = await fetch('http://localhost:5000/api/appointments/reschedule', {
+      const response = await fetch('http://127.0.0.1:8000/api/appointments/reschedule', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ const QueueStatus = ({ booking, onReschedule }: QueueStatusProps) => {
               <Calendar className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Date</span>
             </div>
-            <span className="font-semibold text-sm">{booking.appointmentDate}</span>
+            <span className="font-semibold text-sm">{new Date(booking.appointment_date).toLocaleDateString()}</span>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -137,7 +137,7 @@ const QueueStatus = ({ booking, onReschedule }: QueueStatusProps) => {
               <Clock className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Time</span>
             </div>
-            <span className="font-semibold text-sm">{booking.appointmentTime}</span>
+            <span className="font-semibold text-sm">{booking.appointment_time}</span>
           </div>
         </div>
 

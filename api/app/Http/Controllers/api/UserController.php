@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Data\UserData;
+use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -14,9 +15,28 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return UserData::collect(User::all());
+        $userType = $this->getUserTypeFromRequest($request);
+
+        // If getUserTypeFromRequest() returned a JSON response (invalid role)
+        if ($userType instanceof \Illuminate\Http\JsonResponse) {
+            return $userType;
+        }
+
+        // If no user type found, return all users
+        if (! $userType) {
+            $users = User::all();
+        } else {
+            // Otherwise, filter by type (e.g., PATIENT, DOCTOR)
+            $users = User::with('department', 'doctorAppointments.patient')->where('type', $userType)->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => UserData::collect($users),
+            'message' => 'Users fetched successfully',
+        ]);
     }
 
     /**
@@ -29,7 +49,7 @@ class UserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'phone_number' => 'nullable|string|max:20',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'type'=> 'required|in:PATIENT,DOCTOR,CLINIC_MANAGER'
+            'type' => 'required|in:PATIENT,DOCTOR,CLINIC_MANAGER',
         ]);
 
         $user = User::create([
@@ -43,24 +63,36 @@ class UserController extends Controller
         return response()->json(['success' => true, 'data' => $user], 201);
     }
 
-
     /**
      * Display the specified resource.
      */
     public function show(User $user)
     {
-        return response()->json(['success'=> true,'user'=> UserData::from($user)],200);
+        $user->load('department', 'doctorAppointments', 'patientAppointments', 'doctorAppointments.patient');
+
+        return response()->json(
+            [
+                'success' => true,
+                'user' => UserData::from(
+                    User::with(
+                        [
+                            'department', 'doctorAppointments', 'patientAppointments', 'doctorAppointments.patient','patientAppointments.doctor','patientAppointments.doctor.department',
+                        ]
+                    )
+                        ->find($user->id)),
+            ],
+            200);
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)
-{
+    {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|lowercase|email|max:255|unique:'.User::class.',email,'.$user->id,
-            'password' => ['sometimes','required','confirmed', Rules\Password::defaults()],
+            'password' => ['sometimes', 'required', 'confirmed', Rules\Password::defaults()],
             'phone_number' => 'sometimes|nullable|string|max:20',
         ]);
 
@@ -71,9 +103,7 @@ class UserController extends Controller
             'password' => $request->password ? Hash::make($request->password) : $user->password,
         ]);
 
-        dd($user);
-
-        return response()->json(['success'=> true,'user'=> UserData::from($request->user)],200);
+        return response()->json(['success' => true, 'user' => UserData::from($request->user)], 200);
     }
 
     /**
@@ -82,5 +112,34 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         //
+    }
+
+    private function getUserTypeFromRequest(Request $request)
+    {
+        $segments = $request->segments(); // e.g. ['api', 'users', 'patients']
+        $usersIndex = array_search('users', $segments, true);
+
+        // If URL is just /api/users, no role is provided
+        if ($usersIndex === false || ! isset($segments[$usersIndex + 1])) {
+            return null;
+        }
+
+        $role = strtolower($segments[$usersIndex + 1]);
+
+        $map = [
+            'patients' => UserTypeEnum::PATIENT,
+            'admins' => UserTypeEnum::ADMIN,
+            'doctors' => UserTypeEnum::DOCTOR,
+        ];
+
+        if (! isset($map[$role])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid user type in URL. Expected one of: patients, doctors, admins.',
+                'found' => $role,
+            ], 400);
+        }
+
+        return $map[$role];
     }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ interface BookingFormProps {
   }) => void;
 }
 
+const FORM_STORAGE_KEY = "bookingFormData"; // 🔑 localStorage key
+
 const BookingForm = ({ onSubmit }: BookingFormProps) => {
   const [department, setDepartment] = useState("");
   const [reason, setReason] = useState("");
@@ -29,25 +31,33 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
     appointment_date?: string;
   }>({});
 
+  // 🔄 Load saved form data when component mounts
+  useEffect(() => {
+    const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setDepartment(parsed.department || "");
+        setReason(parsed.reason || "");
+        setAppointmentDate(parsed.appointment_date || "");
+        setDoctorId(parsed.doctor_id || "");
+      } catch (err) {
+        console.error("Failed to parse saved form data:", err);
+      }
+    }
+  }, []);
+
+  // 💾 Auto-save form changes
+  useEffect(() => {
+    const data = { department, reason, appointment_date, doctor_id };
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data));
+  }, [department, reason, appointment_date, doctor_id]);
+
+  // Helper functions
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
-  };
-
-  const getNextWeekdayDate = () => {
-    let date = new Date();
-    date.setDate(date.getDate() + 1); // Start from tomorrow
-
-    // If it's a weekend, move to Monday
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0) { // Sunday
-      date.setDate(date.getDate() + 1); // Move to Monday
-    } else if (dayOfWeek === 6) { // Saturday
-      date.setDate(date.getDate() + 2); // Move to Monday
-    }
-
-    return date.toISOString().split('T')[0];
   };
 
   const isWeekend = (dateString: string) => {
@@ -58,29 +68,17 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
-
-    if (!department.trim()) {
-      newErrors.department = "Please select a department";
-    }
-
-    if (!reason.trim()) {
-      newErrors.reason = "Please describe your symptoms";
-    } else if (reason.trim().length < 10) {
+    if (!department.trim()) newErrors.department = "Please select a department";
+    if (!reason.trim()) newErrors.reason = "Please describe your symptoms";
+    else if (reason.trim().length < 10)
       newErrors.reason = "Please provide more details (at least 10 characters)";
-    }
-
-    if (!appointment_date) {
-      newErrors.appointment_date = "Please select an appointment date";
-    }
-    // ✅ Removed weekend error - we auto-adjust weekends to Monday instead
-
+    if (!appointment_date) newErrors.appointment_date = "Please select an appointment date";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
       toast.error("Please fill in all required fields");
       return;
@@ -89,47 +87,30 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // ✅ AUTO-ADJUST WEEKEND TO MONDAY
       let finalAppointmentDate = appointment_date;
 
+      // Adjust weekends automatically
       if (isWeekend(appointment_date)) {
         const date = new Date(appointment_date);
-        const dayOfWeek = date.getDay();
-
-        // Calculate days to add to get to Monday
-        let daysToAdd = 0;
-        if (dayOfWeek === 0) { // Sunday
-          daysToAdd = 1; // Move to Monday
-        } else if (dayOfWeek === 6) { // Saturday
-          daysToAdd = 2; // Move to Monday
-        }
-
-        date.setDate(date.getDate() + daysToAdd);
-        finalAppointmentDate = date.toISOString().split('T')[0];
-
+        date.setDate(date.getDate() + (date.getDay() === 6 ? 2 : 1));
+        finalAppointmentDate = date.toISOString().split("T")[0];
         toast.info(
           `Weekend booking adjusted! Your appointment has been moved to Monday, ${new Date(finalAppointmentDate).toLocaleDateString()}`,
           { duration: 5000 }
         );
       }
 
-      // Call the parent onSubmit which will handle the API call
-      onSubmit({
+      await onSubmit({
         department,
         reason,
-        appointment_date: finalAppointmentDate, // Use the adjusted date
+        appointment_date: finalAppointmentDate,
         doctor_id: doctor_id || undefined,
       });
 
-      toast.success(
-        `Appointment scheduled for ${new Date(finalAppointmentDate).toLocaleDateString()}! ${
-          doctor_id
-            ? "You'll be seen by your selected doctor."
-            : "Our system will assign you to the best available doctor."
-        }`
-      );
-
-      // Reset form
+      toast.success(`Appointment scheduled for ${new Date(finalAppointmentDate).toLocaleDateString()}!`);
+      
+      // ✅ Clear storage & reset form after successful submission
+      localStorage.removeItem(FORM_STORAGE_KEY);
       setDepartment("");
       setReason("");
       setAppointmentDate("");
@@ -154,20 +135,19 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
           Our AI system will automatically assign you to the best available doctor
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <DepartmentSelector
             value={department}
             onChange={(value) => {
               setDepartment(value);
-              console.log("Selected department:", value);
-              setDoctorId(""); // Reset doctor selection when department changes
+              setDoctorId("");
               setErrors({ ...errors, department: undefined });
             }}
             error={errors.department}
           />
 
-          {/* Appointment Date */}
           <div className="space-y-2">
             <Label htmlFor="appointmentDate" className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" />
@@ -181,14 +161,9 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
               onChange={(e) => {
                 const selectedDate = e.target.value;
                 setAppointmentDate(selectedDate);
-
-                // Show warning if weekend selected
                 if (isWeekend(selectedDate)) {
-                  toast.warning("Note: Weekend appointments are not available. System will automatically adjust to next weekday.", {
-                    duration: 4000
-                  });
+                  toast.warning("Weekend appointments will be moved to Monday.", { duration: 4000 });
                 }
-
                 setErrors({ ...errors, appointment_date: undefined });
               }}
               className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -197,24 +172,22 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
               <p className="text-sm text-destructive">{errors.appointment_date}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              📅 Appointments are available Monday through Friday, 8:00 AM - 4:00 PM
+              📅 Appointments available Monday–Friday, 8:00 AM – 4:00 PM
             </p>
           </div>
 
-          {/* Info about automatic time assignment */}
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
             <div className="flex items-start gap-3">
               <Clock className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-foreground">Automatic Time Assignment</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your appointment time will be automatically assigned based on the queue. Each patient gets 25 minutes with the doctor starting from 8:00 AM.
+                  Your appointment time will be automatically assigned based on the queue.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Optional: Preferred Doctor */}
           {department && (
             <div className="space-y-2">
               <DoctorDropdown
@@ -223,7 +196,7 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
                 onChange={setDoctorId}
               />
               <p className="text-xs text-muted-foreground">
-                Leave empty for automatic assignment to the doctor with least workload
+                Leave empty for automatic assignment to the least busy doctor.
               </p>
             </div>
           )}
@@ -237,8 +210,8 @@ const BookingForm = ({ onSubmit }: BookingFormProps) => {
             error={errors.reason}
           />
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full gradient-primary border-0"
             disabled={isSubmitting}
           >

@@ -1,13 +1,35 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Plus, Search, Filter, Eye, X, EyeOff } from "lucide-react";
+import {
+  ShieldCheck,
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  X,
+  EyeOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/config/api";
 
@@ -23,11 +45,11 @@ const Admins = () => {
   const { toast } = useToast();
 
   const [newAdmin, setNewAdmin] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
-    phone: "",
-    role: "admin"
+    phoneNumber: "",
+    type: "Admin",
   });
 
   useEffect(() => {
@@ -43,9 +65,13 @@ const Admins = () => {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/admins`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users/admins`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
       const data = await response.json();
@@ -53,7 +79,7 @@ const Admins = () => {
         setAdmins(data.data);
       }
     } catch (error) {
-      console.error('Error fetching admins:', error);
+      console.error("Error fetching admins:", error);
     }
   };
 
@@ -62,8 +88,10 @@ const Admins = () => {
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(a => {
-        const isOnline = a.last_login && new Date(a.last_login) > new Date(Date.now() - 5 * 60 * 1000);
+      filtered = filtered.filter((a) => {
+        const isOnline =
+          a.last_login &&
+          new Date(a.last_login) > new Date(Date.now() - 5 * 60 * 1000);
         if (statusFilter === "active") return isOnline && a.is_active;
         if (statusFilter === "inactive") return !isOnline || !a.is_active;
         return true;
@@ -73,11 +101,12 @@ const Admins = () => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(admin =>
-        admin.full_name?.toLowerCase().includes(query) ||
-        admin.staff_id?.toLowerCase().includes(query) ||
-        admin.email?.toLowerCase().includes(query) ||
-        admin.role?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (admin) =>
+          admin.full_name?.toLowerCase().includes(query) ||
+          admin.staff_id?.toLowerCase().includes(query) ||
+          admin.email?.toLowerCase().includes(query) ||
+          admin.role?.toLowerCase().includes(query)
       );
     }
 
@@ -85,7 +114,7 @@ const Admins = () => {
   };
 
   const handleCreateAdmin = async () => {
-    if (!newAdmin.fullName || !newAdmin.email || !newAdmin.password) {
+    if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -104,14 +133,15 @@ const Admins = () => {
     }
 
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/admins`, {
-        method: 'POST',
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
-        body: JSON.stringify(newAdmin)
+        body: JSON.stringify(newAdmin),
       });
 
       const data = await response.json();
@@ -119,9 +149,15 @@ const Admins = () => {
       if (data.success) {
         toast({
           title: "Admin Account Created",
-          description: `Staff ID: ${data.data.staffId} - Login credentials sent to email`,
+          description: `Staff ID: ${data.user.staffId} - Login credentials sent to email`,
         });
-        setNewAdmin({ fullName: "", email: "", password: "", phone: "", role: "admin" });
+        setNewAdmin({
+          name: "",
+          email: "",
+          password: "",
+          phoneNumber: "",
+          type: "admin",
+        });
         setIsCreateDialogOpen(false);
         fetchAdmins();
       } else {
@@ -142,14 +178,18 @@ const Admins = () => {
 
   const handleViewProfile = async (admin: any) => {
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/admins/${admin.user_id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users/${admin.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
       const data = await response.json();
       if (data.success) {
-        setSelectedAdmin(data.data);
+        setSelectedAdmin(data.user);
         setIsViewDialogOpen(true);
       }
     } catch (error) {
@@ -163,11 +203,14 @@ const Admins = () => {
 
   const handleToggleStatus = async (admin: any) => {
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/admins/${admin.user_id}/toggle-status`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(
+        `${API_BASE_URL}/api/admins/${admin.user_id}/toggle-status`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const data = await response.json();
 
@@ -188,15 +231,19 @@ const Admins = () => {
   };
 
   const handleRevokeAdmin = async (admin: any) => {
-    if (!confirm(`Are you sure you want to permanently delete ${admin.full_name}'s account? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete ${admin.name}'s account? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
     try {
-      const token = localStorage.getItem('staffToken');
-  const response = await fetch(`${API_BASE_URL}/api/admins/${admin.user_id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const token = localStorage.getItem("staffToken");
+      const response = await fetch(`${API_BASE_URL}/api/users/${admin.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await response.json();
@@ -224,11 +271,11 @@ const Admins = () => {
   };
 
   const getAdminStatus = (admin: any) => {
-    if (!admin.is_active) {
+    if (!admin.isOnline) {
       return { label: "Disabled", variant: "destructive" as const };
     }
     // Check is_online flag from database
-    if (admin.is_online === 1) {
+    if (admin.isOnline === 1) {
       return { label: "Online", variant: "default" as const };
     }
     return { label: "Offline", variant: "secondary" as const };
@@ -237,7 +284,7 @@ const Admins = () => {
   const getInitials = (name: string) => {
     return name
       .split(" ")
-      .map(n => n[0])
+      .map((n) => n[0])
       .join("")
       .toUpperCase();
   };
@@ -257,7 +304,9 @@ const Admins = () => {
             <ShieldCheck className="w-8 h-8 text-primary" />
             Admin Management
           </h1>
-          <p className="text-muted-foreground">Manage administrator accounts and permissions</p>
+          <p className="text-muted-foreground">
+            Manage administrator accounts and permissions
+          </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -270,17 +319,20 @@ const Admins = () => {
             <DialogHeader>
               <DialogTitle>Create Admin Account</DialogTitle>
               <DialogDescription>
-                Add a new administrator to the system. Employee ID will be auto-generated.
+                Add a new administrator to the system. Employee ID will be
+                auto-generated.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="fullName">Full Name *</Label>
+                <Label htmlFor="name">Full Name *</Label>
                 <Input
-                  id="fullName"
+                  id="name"
                   placeholder="John Administrator"
-                  value={newAdmin.fullName}
-                  onChange={(e) => setNewAdmin({ ...newAdmin, fullName: e.target.value })}
+                  value={newAdmin.name}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, name: e.target.value })
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -290,7 +342,9 @@ const Admins = () => {
                   type="email"
                   placeholder="admin@goodhealth.com"
                   value={newAdmin.email}
-                  onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, email: e.target.value })
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -301,7 +355,9 @@ const Admins = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Min 8 characters"
                     value={newAdmin.password}
-                    onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                    onChange={(e) =>
+                      setNewAdmin({ ...newAdmin, password: e.target.value })
+                    }
                     className="pr-10"
                   />
                   <Button
@@ -318,21 +374,32 @@ const Admins = () => {
                     )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters
+                </p>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number (Zimbabwean Format)</Label>
+                <Label htmlFor="phoneNumber">Phone Number (Zimbabwean Format)</Label>
                 <Input
-                  id="phone"
+                  id="phoneNumber"
                   placeholder="+263712345678"
-                  value={newAdmin.phone}
-                  onChange={(e) => setNewAdmin({ ...newAdmin, phone: e.target.value })}
+                  value={newAdmin.phoneNumber}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, phoneNumber: e.target.value })
+                  }
                 />
-                <p className="text-xs text-muted-foreground">Format: +263XXXXXXXXX</p>
+                <p className="text-xs text-muted-foreground">
+                  Format: +263XXXXXXXXX
+                </p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="role">Role *</Label>
-                <Select value={newAdmin.role} onValueChange={(value) => setNewAdmin({ ...newAdmin, role: value })}>
+                <Select
+                  value={newAdmin.type.toLowerCase()}
+                  onValueChange={(value) =>
+                    setNewAdmin({ ...newAdmin, type: value })
+                  }
+                >
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -344,16 +411,23 @@ const Admins = () => {
               </div>
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <p className="text-sm text-foreground">
-                  <strong>Note:</strong> Employee ID will be auto-generated (e.g., EMP0001).
-                  The admin can use their email and password to login to the admin dashboard.
+                  <strong>Note:</strong> Employee ID will be auto-generated
+                  (e.g., EMP0001). The admin can use their email and password to
+                  login to the admin dashboard.
                 </p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateAdmin} className="bg-primary hover:bg-primary-hover">
+              <Button
+                onClick={handleCreateAdmin}
+                className="bg-primary hover:bg-primary-hover"
+              >
                 Create Account
               </Button>
             </DialogFooter>
@@ -400,40 +474,46 @@ const Admins = () => {
               const status = getAdminStatus(admin);
               return (
                 <div
-                  key={admin.user_id}
+                  key={admin.id}
                   className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-secondary/50 transition-smooth"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <Avatar className="w-12 h-12 bg-primary">
                       <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                        {getInitials(admin.full_name)}
+                        {getInitials(admin.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-foreground">{admin.full_name}</h4>
+                      <h4 className="font-semibold text-foreground">
+                        {admin.name}
+                      </h4>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        <span className="text-sm text-muted-foreground">{admin.email}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {admin.email}
+                        </span>
                         <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-sm text-muted-foreground">ID: {admin.staff_id}</span>
+                        <span className="text-sm text-muted-foreground">
+                          ID: {admin.staffId}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="text-right hidden md:block">
-                      <Badge className={getRoleBadgeColor(admin.role)}>
-                        {admin.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                      <Badge className={getRoleBadgeColor(admin.type)}>
+                        {admin.type === "superadmin" ? "Super Admin" : "Admin"}
                       </Badge>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {admin.last_login
-                          ? `Active ${new Date(admin.last_login).toLocaleDateString()}`
-                          : 'Never logged in'}
+                        {admin.lastLoginAt
+                          ? `Active ${new Date(
+                              admin.lastLoginAt
+                            ).toLocaleDateString()}`
+                          : "Never logged in"}
                       </p>
                     </div>
 
-                    <Badge variant={status.variant}>
-                      {status.label}
-                    </Badge>
+                    <Badge variant={status.variant}>{status.label}</Badge>
 
                     <div className="flex gap-2">
                       <Button
@@ -445,12 +525,16 @@ const Admins = () => {
                         View
                       </Button>
                       <Button
-                        variant={admin.is_active ? "ghost" : "default"}
+                        variant={admin.isOnline ? "ghost" : "default"}
                         size="sm"
-                        className={admin.is_active ? "text-destructive hover:text-destructive" : ""}
+                        className={
+                          admin.isOnline
+                            ? "text-destructive hover:text-destructive"
+                            : ""
+                        }
                         onClick={() => handleToggleStatus(admin)}
                       >
-                        {admin.is_active ? 'Disable' : 'Enable'}
+                        {admin.isOnline ? "Disable" : "Enable"}
                       </Button>
                       <Button
                         variant="destructive"
@@ -474,13 +558,6 @@ const Admins = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Admin Profile</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsViewDialogOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </DialogTitle>
           </DialogHeader>
           {selectedAdmin && (
@@ -491,40 +568,58 @@ const Admins = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Staff ID</Label>
-                    <p className="font-medium">{selectedAdmin.admin.staff_id}</p>
+                    <p className="font-medium">
+                      {selectedAdmin.staffId}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Full Name</Label>
-                    <p className="font-medium">{selectedAdmin.admin.full_name}</p>
+                    <p className="font-medium">
+                      {selectedAdmin.name}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Email</Label>
-                    <p className="font-medium">{selectedAdmin.admin.email}</p>
+                    <p className="font-medium">{selectedAdmin.email}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Phone</Label>
-                    <p className="font-medium">{selectedAdmin.admin.phone || 'N/A'}</p>
+                    <p className="font-medium">
+                      {selectedAdmin.phoneNumber || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Role</Label>
-                    <Badge className={getRoleBadgeColor(selectedAdmin.admin.role)}>
-                      {selectedAdmin.admin.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                    <Badge
+                      className={getRoleBadgeColor(selectedAdmin.type)}
+                    >
+                      {selectedAdmin.type}
                     </Badge>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Status</Label>
-                    <Badge variant={selectedAdmin.admin.is_active ? "default" : "destructive"}>
-                      {selectedAdmin.admin.is_active ? "Active" : "Disabled"}
+                    <Badge
+                      variant={
+                        selectedAdmin.isOnline
+                          ? "default"
+                          : "destructive"
+                      }
+                    >
+                      {selectedAdmin.isOnline ? "Active" : "Disabled"}
                     </Badge>
                   </div>
-                  <div>
+                  {/* <div>
                     <Label className="text-muted-foreground">Created By</Label>
-                    <p className="font-medium">{selectedAdmin.admin.created_by_name || 'System'}</p>
-                  </div>
+                    <p className="font-medium">
+                      {selectedAdmin.created_by_name || "System"}
+                    </p>
+                  </div> */}
                   <div>
                     <Label className="text-muted-foreground">Created At</Label>
                     <p className="font-medium">
-                      {new Date(selectedAdmin.admin.created_at).toLocaleDateString()}
+                      {new Date(
+                        selectedAdmin.createdAt
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -533,14 +628,16 @@ const Admins = () => {
               {/* Recent Activity */}
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">Recent Activity</h3>
-                {selectedAdmin.auditLogs.length > 0 ? (
+                {Array.isArray(selectedAdmin.auditLogs) &&  selectedAdmin.auditLogs.length > 0 ? (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {selectedAdmin.auditLogs.slice(0, 10).map((log: any) => (
                       <div key={log.log_id} className="p-3 border rounded-lg">
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium text-sm">{log.action}</p>
-                            <p className="text-xs text-muted-foreground">{log.description}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {log.description}
+                            </p>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             {new Date(log.timestamp).toLocaleString()}
@@ -550,13 +647,18 @@ const Admins = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No recent activity</p>
+                  <p className="text-sm text-muted-foreground">
+                    No recent activity
+                  </p>
                 )}
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -572,11 +674,17 @@ const Admins = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-primary/10">
               <h4 className="font-semibold text-primary mb-2">Super Admin</h4>
-              <p className="text-sm text-muted-foreground">Full system access, can manage all users, settings, and create other admins</p>
+              <p className="text-sm text-muted-foreground">
+                Full system access, can manage all users, settings, and create
+                other admins
+              </p>
             </div>
             <div className="p-4 rounded-lg bg-accent-teal/10">
               <h4 className="font-semibold text-accent-teal mb-2">Admin</h4>
-              <p className="text-sm text-muted-foreground">Can manage patients, doctors, appointments, and view dashboard analytics</p>
+              <p className="text-sm text-muted-foreground">
+                Can manage patients, doctors, appointments, and view dashboard
+                analytics
+              </p>
             </div>
           </div>
         </CardContent>

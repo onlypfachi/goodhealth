@@ -20,6 +20,8 @@ export const StatsCard = ({
   trend,
   iconColor = "bg-primary"
 }: StatsCardProps) => {
+
+  console.log("Rendering StatsCard:", { title, value, trend, iconColor });
   return (
     <Card className="transition-smooth hover:card-shadow-hover">
       <CardContent className="p-6">

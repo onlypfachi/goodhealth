@@ -30,7 +30,7 @@ interface AppointmentResponse {
 }
 
 interface Appointment {
-  id?: string;
+  id?: number;
   patient: {
     id?: number;
     name?: string;

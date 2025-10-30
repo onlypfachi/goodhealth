@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Data\UserData;
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -30,11 +31,14 @@ class AuthController extends Controller
                 'message' => 'User not found',
             ], 404);
         }
+        $user->setAttribute('last_login_at', now());
+        $user->setAttribute('is_online', true);
+        $user->save();
 
         return response()->json([
             'success' => true,
             'message' => 'User logged in successfully',
-            'user' => $user,
+            'user' => UserData::from($user),
             'token' => $user->createToken('auth_token')->plainTextToken,
         ], 200);
     }
@@ -58,6 +62,8 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'type' => $userType,
+            'last_login_at' => now(),
+            'is_online' => true,
         ]);
 
         return response()->json([
@@ -70,6 +76,9 @@ class AuthController extends Controller
 
     public function logout(Request $request){
         $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->setAttribute('isOnline', false);
+        $user->save();
 
         return response()->json([
             'success' => true,

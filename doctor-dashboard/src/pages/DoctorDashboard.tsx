@@ -290,7 +290,7 @@ const DoctorDashboard = () => {
     // Call patient via backend API
     try {
       const token = localStorage.getItem('staffToken');
-      const response = await fetch('http://localhost:5000/api/queue/call', {
+      const response = await fetch('http://127.0.0.1:8000/api/queue/call', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

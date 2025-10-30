@@ -15,6 +15,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
+        "opcodesio/log-viewer": "^3.21",
         "spatie/enum": "^3.13",
         "spatie/laravel-data": "^4.17",
         "spatie/laravel-typescript-transformer": "^2.5"

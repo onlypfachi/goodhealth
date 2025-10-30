@@ -15,11 +15,11 @@ const StaffLogin = () => {
   const [errors, setErrors] = useState({
     email: "",
     staffId: "",
-    password: ""
+    password: "",
   });
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
@@ -29,7 +29,7 @@ const StaffLogin = () => {
 
   const validateStaffId = (staffId: string) => {
     // Staff ID must be in format EMP1234 (EMP followed by 4 digits)
-    const staffIdRegex = /^EMP\d{4}$/;
+    const staffIdRegex = /^STF-\d{4}$/;
     return staffIdRegex.test(staffId);
   };
 
@@ -37,7 +37,7 @@ const StaffLogin = () => {
     setErrors({
       email: "",
       staffId: "",
-      password: ""
+      password: "",
     });
   };
 
@@ -47,7 +47,7 @@ const StaffLogin = () => {
     const newErrors = {
       email: "",
       staffId: "",
-      password: ""
+      password: "",
     };
     let isValid = true;
 
@@ -88,32 +88,37 @@ const StaffLogin = () => {
     setIsLoading(true);
     try {
       // Call staff login API
-  const response = await fetch(`${API_BASE_URL}//login`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        credentials: 'include',
+        // credentials: 'include',
         body: JSON.stringify({ email, staffId, password }),
       });
 
       const data = await response.json();
-      console.log('Login response:', data); // Debug log
+      console.log("Login response:", data); // Debug log
 
       if (data.success) {
         // Store staff token - data is nested in data.data
-        localStorage.setItem('staffToken', data.data.token);
-        localStorage.setItem('staffUser', JSON.stringify(data.data.user));
+        localStorage.setItem("staffToken", data.token);
+        localStorage.setItem("staffUser", JSON.stringify(data.user));
 
         toast.success("Login successful! Welcome back.");
 
         // Redirect to admin dashboard
         navigate("/");
       } else {
-        toast.error(data.message || "Login failed. Please check your credentials.");
+        toast.error(
+          data.message || "Login failed. Please check your credentials."
+        );
       }
     } catch (error) {
-      toast.error("Cannot connect to server. Please make sure the server is running.");
+      toast.error(
+        "Cannot connect to server. Please make sure the server is running."
+      );
       console.error("Auth error:", error);
     } finally {
       setIsLoading(false);
@@ -127,7 +132,8 @@ const StaffLogin = () => {
           {/* Logo/Title */}
           <div className="staff-login-logo-section">
             <h1 className="staff-login-title">
-              Welcome To <span className="staff-login-title-good">GOOD</span>HEALTH
+              Welcome To <span className="staff-login-title-good">GOOD</span>
+              HEALTH
             </h1>
             <p className="staff-login-subtitle">Online Booking Staff Portal</p>
           </div>
@@ -141,10 +147,14 @@ const StaffLogin = () => {
                   placeholder="Email Address..."
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`staff-login-input ${errors.email ? "staff-login-input-error" : ""}`}
+                  className={`staff-login-input ${
+                    errors.email ? "staff-login-input-error" : ""
+                  }`}
                   disabled={isLoading}
                 />
-                {errors.email && <span className="staff-login-error-text">{errors.email}</span>}
+                {errors.email && (
+                  <span className="staff-login-error-text">{errors.email}</span>
+                )}
               </div>
 
               <div className="staff-login-input-wrapper">
@@ -153,10 +163,16 @@ const StaffLogin = () => {
                   placeholder="Staff ID..."
                   value={staffId}
                   onChange={(e) => setStaffId(e.target.value)}
-                  className={`staff-login-input ${errors.staffId ? "staff-login-input-error" : ""}`}
+                  className={`staff-login-input ${
+                    errors.staffId ? "staff-login-input-error" : ""
+                  }`}
                   disabled={isLoading}
                 />
-                {errors.staffId && <span className="staff-login-error-text">{errors.staffId}</span>}
+                {errors.staffId && (
+                  <span className="staff-login-error-text">
+                    {errors.staffId}
+                  </span>
+                )}
               </div>
 
               <div className="staff-login-input-wrapper staff-login-password-wrapper">
@@ -165,7 +181,9 @@ const StaffLogin = () => {
                   placeholder="Password..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`staff-login-input ${errors.password ? "staff-login-input-error" : ""}`}
+                  className={`staff-login-input ${
+                    errors.password ? "staff-login-input-error" : ""
+                  }`}
                   disabled={isLoading}
                 />
                 <button
@@ -174,9 +192,17 @@ const StaffLogin = () => {
                   className="staff-login-toggle-password"
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
-                {errors.password && <span className="staff-login-error-text">{errors.password}</span>}
+                {errors.password && (
+                  <span className="staff-login-error-text">
+                    {errors.password}
+                  </span>
+                )}
               </div>
 
               <button
@@ -198,7 +224,9 @@ const StaffLogin = () => {
 
           {/* Footer */}
           <div className="staff-login-footer">
-            <p className="staff-login-footer-text">Your health is our priority</p>
+            <p className="staff-login-footer-text">
+              Your health is our priority
+            </p>
           </div>
         </div>
       </div>
